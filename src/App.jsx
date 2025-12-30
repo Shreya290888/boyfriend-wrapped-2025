@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 const Button = ({ children, onClick, variant = 'primary', className = '' }) => (
@@ -27,6 +27,34 @@ const Page = ({ children }) => (
     </div>
   </motion.main>
 )
+
+// Handmade doodles overlay (subtle hearts/stars around)
+const Doodles = () => {
+  const items = useMemo(() => ([
+    { cls: 'heart', left: '6%', top: '10%', size: 22, rot: -8 },
+    { cls: 'star', right: '8%', top: '16%', size: 18, rot: 12 },
+    { cls: 'heart', left: '10%', bottom: '12%', size: 18, rot: 8 },
+    { cls: 'star', right: '12%', bottom: '10%', size: 20, rot: -10 },
+  ]), [])
+  return (
+    <div className="doodles" aria-hidden>
+      {items.map((d, i) => (
+        <span key={i}
+          className={`doodle ${d.cls}`}
+          style={{
+            position: 'absolute',
+            left: d.left,
+            right: d.right,
+            top: d.top,
+            bottom: d.bottom,
+            transform: `rotate(${d.rot}deg)`,
+            fontSize: d.size,
+          }}
+        >{d.cls === 'heart' ? '♥' : '✶'}</span>
+      ))}
+    </div>
+  )
+}
 
 const Landing = ({ onContinue }) => (
   <Page>
@@ -307,11 +335,53 @@ const FinalScreen = () => {
     }))
   }, [])
 
+  // Fireworks particles
+  const fireworks = useMemo(() => {
+    const colors = ['#ffb3c1', '#ffd6a5', '#caffbf', '#9bf6ff', '#bdb2ff', '#fff']
+    return Array.from({ length: 28 }).map((_, i) => ({
+      left: Math.random() * 100,
+      top: Math.random() * 60 + 10,
+      delay: Math.random() * 2.2,
+      color: colors[i % colors.length],
+    }))
+  }, [])
+
+  // Typed letter effect for the final message
+  const message = `thank youuuu motteyyy for being there for me at every point ,
+my safest place, my comfort, my home away from home.
+This was Boyfriend Wrapped 2025.
+Let’s make 2026 bigger, and memories together .
+I Loveeeeeeeeeeeeee Youhhhhhhhhhhhhhh So Muchhhhhhhhhhhhhhhhhhhh Mottteyyyyyyyyyyyyyyyyyyyy.`
+  const [typed, setTyped] = useState('')
+  useEffect(() => {
+    let i = 0
+    const id = setInterval(() => {
+      i++
+      setTyped(message.slice(0, i))
+      if (i >= message.length) clearInterval(id)
+    }, 20)
+    return () => clearInterval(id)
+  }, [message])
+
   return (
     <Page>
       <div className="relative card px-8 py-12 md:px-12 md:py-16 text-center tilt-2 overflow-hidden max-h-[80vh] overflow-y-auto">
         <div className="tape top-left" />
         <div className="tape top-right" />
+        <div className="fireworks" aria-hidden>
+          {fireworks.map((f, idx) => (
+            <span
+              key={idx}
+              className="firework"
+              style={{
+                left: f.left + 'vw',
+                top: f.top + 'vh',
+                backgroundColor: f.color,
+                animationDelay: f.delay + 's',
+              }}
+            />
+          ))}
+        </div>
         <div className="confetti" aria-hidden>
           {confettiPieces.map((p, idx) => (
             <span
@@ -330,12 +400,8 @@ const FinalScreen = () => {
             />
           ))}
         </div>
-        <div className="hand text-2xl md:text-3xl whitespace-pre-line mb-8">
-thank youuuu motteyyy for being there for me at every point ,
-my safest place, my comfort, my home away from home.
-This was Boyfriend Wrapped 2025.
-Let’s make 2026 bigger, and memories together .
-I Loveeeeeeeeeeeeee Youhhhhhhhhhhhhhh So Muchhhhhhhhhhhhhhhhhhhh Mottteyyyyyyyyyyyyyyyyyyyy.
+        <div className="hand text-2xl md:text-3xl whitespace-pre-line mb-8 min-h-[8rem]">
+{typed}
         </div>
         <div className="hand text-3xl md:text-4xl mb-6">🎉 Happy New Year 2026 🎉</div>
         <div className="flex items-center justify-center gap-3">
@@ -347,12 +413,53 @@ I Loveeeeeeeeeeeeee Youhhhhhhhhhhhhhh So Muchhhhhhhhhhhhhhhhhhhh Mottteyyyyyyyyy
   )
 }
 
+// Floating heart cursor layer
+const HeartLayer = () => {
+  const layerRef = useRef(null)
+  useEffect(() => {
+    const colors = ['#ffb3c1', '#ffd6a5', '#caffbf', '#9bf6ff']
+    const onClick = (e) => {
+      const el = document.createElement('span')
+      el.className = 'heart-pop'
+      el.textContent = '❤'
+      el.style.left = e.clientX + 'px'
+      el.style.top = e.clientY + 'px'
+      el.style.color = colors[Math.floor(Math.random() * colors.length)]
+      el.style.fontSize = (14 + Math.random() * 10) + 'px'
+      layerRef.current.appendChild(el)
+      setTimeout(() => el.remove(), 1600)
+    }
+    window.addEventListener('click', onClick)
+    return () => window.removeEventListener('click', onClick)
+  }, [])
+  return <div className="heart-layer" ref={layerRef} aria-hidden />
+}
+
+// Love counter widget with localStorage
+const LoveCounter = () => {
+  const [count, setCount] = useState(() => {
+    const v = Number(localStorage.getItem('love_count') || '0')
+    return Number.isFinite(v) ? v : 0
+  })
+  useEffect(() => {
+    localStorage.setItem('love_count', String(count))
+  }, [count])
+  return (
+    <div className="love-counter px-3 py-2 flex items-center gap-3">
+      <span className="hand">i love you: {count}</span>
+      <Button onClick={() => setCount(c => c + 1)} className="!px-3 !py-2">+
+      </Button>
+    </div>
+  )
+}
+
 export default function App() {
   const [step, setStep] = useState(0)
   const [warningOpen, setWarningOpen] = useState(false)
 
   return (
     <div>
+      <Doodles />
       <WarningModal
         open={warningOpen}
         onYes={() => { setWarningOpen(false); setStep(2) }}
@@ -382,6 +489,8 @@ export default function App() {
           <FinalScreen key="final" />
         )}
       </AnimatePresence>
+      <HeartLayer />
+      <LoveCounter />
     </div>
   )
 }

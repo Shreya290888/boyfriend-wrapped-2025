@@ -96,3 +96,53 @@
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
+
+/* Handmade doodles */
+.doodles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.doodle {
+  position: absolute;
+  opacity: 0.6;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.25));
+}
+.doodle.heart { color: #ffb3c1; }
+.doodle.star { color: #ffd6a5; }
+
+/* Floating heart cursor */
+@keyframes heart-float {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(-50%, -140%) scale(1.2); opacity: 0; }
+}
+.heart-layer { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+.heart-pop {
+  position: absolute;
+  will-change: transform, opacity;
+  animation: heart-float 1.4s ease-out forwards;
+}
+
+/* Love counter */
+.love-counter {
+  @apply card;
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 60;
+}
+
+/* Fireworks */
+@keyframes firework-pop {
+  0% { transform: scale(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+.fireworks { position: absolute; inset: 0; pointer-events: none; z-index: 40; }
+.firework {
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 9999px;
+  animation: firework-pop 1200ms ease-out forwards;
+}
